@@ -1,0 +1,48 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Local outputs and secrets
+outputs/**
+!outputs/.gitkeep
+.env
+.env.*
+!.env.example
+*.pem
+secrets/
+
+# Benchmark source documents (keep structure, not private files)
+benchmark/source/*
+!benchmark/source/.gitkeep
+benchmark/ground_truth/*
+!benchmark/ground_truth/.gitkeep
+benchmark/results/*
+!benchmark/results/.gitkeep
+
+# Temporary / local fixtures generated during smoke tests
+*.tmp
+tmp/

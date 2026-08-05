@@ -1,0 +1,6 @@
+document_id,filename,category,source_type,language_mix,scan_quality,has_tables,has_multiple_columns,has_headers_footers,contains_sensitive_data,ground_truth_status,notes
+bench_001,synthetic_digital_ar.pdf,synthetic,born_digital,ar,n/a,false,false,false,false,pending,Placeholder row; generate locally for evaluation runs
+bench_002,synthetic_scanned_blank.pdf,synthetic,scanned,unknown,low,false,false,false,false,pending,Placeholder row; full-page image scan simulation
+bench_003,synthetic_mixed_en_ar.pdf,synthetic,born_digital,ar+en,n/a,false,false,true,false,pending,Placeholder row; bilingual digital text
+bench_004,synthetic_empty_page.pdf,synthetic,born_digital,none,n/a,false,false,false,false,pending,Placeholder row; intentionally empty page
+bench_005,public_sample_placeholder.pdf,public,unknown,unknown,unknown,false,false,false,false,not_started,Do not commit private documents; replace with public/anonymized only
