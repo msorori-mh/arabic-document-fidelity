@@ -1,58 +1,60 @@
-# Architecture — Foundation-01
+# Architecture
 
-## Current pipeline
+## Current pipeline (through OCR-ROUTER-01A)
 
 ```text
 PDF input
-    → PDF analyzer (PyMuPDF, read-only)
-    → Arabic Document IR (versioned Pydantic models)
-    → diagnosis output (diagnosis.json + summary.txt)
+  → native PDF analyzer (PyMuPDF, read-only)
+  → Arabic Document IR (versioned Pydantic models)
+  → OCR routing plan (sidecar; IR unchanged)
+  → future OCR execution (not implemented in 01A)
 ```
+
+Diagnosis CLI still emits `diagnosis.json` + `summary.txt`.
+Plan-OCR CLI emits `diagnosis.json` + `routing-plan.json` + `routing-summary.txt`.
 
 ### PDF input
 
-Local filesystem PDF. The analyzer computes SHA-256 of the source bytes and
-opens the file with PyMuPDF. Encrypted/locked PDFs fail with a clear error.
+Local filesystem PDF. SHA-256 identity; encrypted/locked PDFs fail closed.
 
-### PDF analyzer
+### Native PDF analyzer
 
-`packages/pdf_analyzer` inspects each page:
-
-- native text blocks and bounding boxes
-- embedded images and approximate coverage
-- conservative page-type classification
-- OCR-need estimate (heuristic only)
-- Arabic character detection and RTL/LTR/mixed direction tags
-- deterministic reading-order indices
-
-No OCR, no network, no text reshaping, no visual bidi conversion of stored text.
+`packages/pdf_analyzer` inspects pages for native text/images, coverage,
+conservative page types, OCR-need estimates, Arabic/direction hints, and
+deterministic reading order. No OCR execution.
 
 ### Arabic Document IR
 
-`packages/document_model` defines `DocumentModel` / `PageModel` / `BlockModel`
-with schema version `1.0.0`. See [`ARABIC-DOCUMENT-IR.md`](ARABIC-DOCUMENT-IR.md).
+`packages/document_model` — schema `1.0.0`. See [`ARABIC-DOCUMENT-IR.md`](ARABIC-DOCUMENT-IR.md).
 
-### Diagnosis output
+### OCR routing plan
 
-The CLI writes only under the selected `--output` directory:
+`packages/document_router` consumes IR fields and an `OCREngineRegistry` to
+produce a `DocumentRoutingPlan` sidecar. Default routing excludes test-only
+engines. See [`OCR-ROUTER-01A.md`](OCR-ROUTER-01A.md).
 
-- `diagnosis.json` — full IR plus summary dict
-- `summary.txt` — human-readable aggregates
+### Future OCR execution
 
-## Future boundaries
+Not implemented. A later package may invoke eligible `OCREngine` implementations
+for `run_ocr` decisions only.
 
-| Component | Boundary |
-|-----------|----------|
-| **OCR engines** | Separate package; consume page images / regions; write OCR blocks into IR with `source_engine` tags. Not invoked by Foundation-01. |
-| **Document router** | Chooses digital-only vs OCR vs hybrid based on page_type / needs_ocr / risk. Lives above the analyzer. |
-| **DOCX compiler** | Reads IR only; emits DOCX. Must not re-parse PDF ad hoc. |
-| **Round-trip validator** | Compares source PDF signals, IR, and compiled DOCX for fidelity metrics. |
-| **Visual review studio** | UI for humans to inspect risky pages/blocks; reads IR + renders; does not replace the IR contract. |
+## Component boundaries
+
+| Component | Status |
+|-----------|--------|
+| OCR engine contract + registry | Implemented (01A) |
+| Mock OCR (tests only) | Implemented (01A) |
+| Document router (plan only) | Implemented (01A) |
+| Real OCR engines (Paddle/Tesseract/cloud) | **Not** implemented |
+| DOCX compiler | Future |
+| Round-trip validator | Future |
+| Visual review studio | Future |
 
 ## Design principles
 
-1. **Deterministic** — same bytes → same structural diagnosis (timestamps/duration aside).
-2. **Conservative** — prefer `unknown` / warnings over overconfident labels.
-3. **Logical text** — store extraction order; do not reverse Arabic strings.
-4. **No fabricated confidence** — `confidence` is `null` unless a real score exists.
-5. **Local-first** — no external services in this foundation package.
+1. **Deterministic** — same inputs → same structural plans (timestamps aside).
+2. **Conservative** — prefer `review_required` / `unknown` over overconfidence.
+3. **Logical text** — never reverse Arabic for storage; no visual bidi conversion.
+4. **No fabricated confidence** — `null` unless a real score exists.
+5. **Local-first** — no external services in current packages.
+6. **Fail closed** — high-risk and unknown pages never silently pass as native-only.
