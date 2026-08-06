@@ -1,29 +1,31 @@
 # Arabic Document Fidelity
 
-Local-first foundation for analyzing Arabic PDF documents and representing them
-as a **stable intermediate document model** (Arabic Document IR).
+Local-first platform for analyzing Arabic PDF documents into a stable
+intermediate representation, with conservative OCR routing plans.
 
-This repository currently ships **Foundation-01**: read-only PDF inspection,
-conservative page classification, and a diagnosis CLI. It does **not** perform
-OCR, call cloud APIs, or produce editable DOCX output.
+Current packages:
+
+- **Foundation-01** — native PDF analysis + Arabic Document IR + `diagnose` CLI
+- **OCR-ROUTER-01A** — OCR engine contract, registry, router plans, `plan-ocr` CLI
+
+This repository does **not** run real OCR, call cloud APIs, or produce DOCX.
 
 ## Product purpose
 
-Arabic Document Fidelity aims to preserve layout and reading fidelity when
-processing Arabic (and bilingual) documents — from PDF intake through
-structured IR, optional OCR routing, DOCX compilation, and round-trip
-validation. Foundation-01 establishes the IR and the native-PDF analyzer only.
+Preserve layout and reading fidelity for Arabic (and bilingual) documents from
+PDF intake through structured IR, optional OCR routing, DOCX compilation, and
+round-trip validation.
 
-## Current foundation scope (Foundation-01)
+## Current scope
 
 | Included | Not included |
 |----------|--------------|
-| Versioned Arabic Document IR (Pydantic v2) | OCR engines |
-| PyMuPDF native text/image inspection | Cloud APIs / LLMs |
-| Conservative page-type heuristics | Authentication / Supabase |
-| Local CLI `diagnose` | Payments / frontend UI |
-| Benchmark manifest skeleton | Production deployment |
-| Unit and integration tests | Automatic text correction |
+| Versioned Arabic Document IR (Pydantic v2) | Real OCR engines (Paddle/Tesseract/cloud) |
+| PyMuPDF native text/image inspection | OCR execution on user PDFs |
+| OCR engine contract + registry | Authentication / Supabase |
+| Conservative OCR routing plans | Payments / frontend UI |
+| Mock OCR for tests only | Production deployment |
+| CLI `diagnose` and `plan-ocr` | Automatic text correction |
 
 ## Installation
 
@@ -39,11 +41,11 @@ python -m pip install -e ".[dev]"
 
 ## CLI usage
 
+### Diagnose (native analysis only)
+
 ```powershell
 python -m apps.cli diagnose --input sample.pdf --output outputs\sample
 ```
-
-Produces:
 
 ```text
 outputs/sample/
@@ -51,7 +53,20 @@ outputs/sample/
   summary.txt
 ```
 
-Exit codes: `0` success; non-zero for missing/invalid input or unrecoverable analysis errors.
+### Plan OCR routing (no OCR execution)
+
+```powershell
+python -m apps.cli plan-ocr --input sample.pdf --output outputs\sample-routing
+```
+
+```text
+outputs/sample-routing/
+  diagnosis.json
+  routing-plan.json
+  routing-summary.txt
+```
+
+Exit codes: `0` success; non-zero for missing/invalid input or unrecoverable errors.
 
 ## Test commands
 
@@ -67,19 +82,20 @@ pytest
 Do **not** commit private, confidential, or sensitive PDFs. Benchmark sources
 must be public, synthetic, or anonymized. See `benchmark/README.md`.
 
-## Explicit non-goals (this package)
+## Explicit non-goals (current packages)
 
-- No OCR (PaddleOCR, Tesseract, or proprietary engines)
+- No real OCR (PaddleOCR, Tesseract, proprietary, or cloud)
 - No LLM or vision-API “correction”
 - No Arabic reshape / visual bidi conversion of stored logical text
 - No FastAPI / web UI / auth / database
 - No claim of production readiness
+- Mock OCR is test-only and excluded from default routing
 
 ## Roadmap (summary)
 
-1. **Foundation-01** (this package) — IR + native PDF analyzer + CLI
-2. **OCR package** — pluggable engines behind a router; IR enrichment
-3. **Document router** — choose digital vs OCR vs hybrid paths
+1. **Foundation-01** — IR + native PDF analyzer + diagnose CLI
+2. **OCR-ROUTER-01A** (this package) — contract, registry, routing plans
+3. **OCR-ROUTER-01B** — real local OCR engine behind the contract (future)
 4. **DOCX compiler** — emit editable Word from IR
 5. **Round-trip validator** — fidelity checks PDF ↔ IR ↔ DOCX
 6. **Visual review studio** — human review of risky pages/blocks
@@ -88,6 +104,8 @@ must be public, synthetic, or anonymized. See `benchmark/README.md`.
 
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 - [`docs/ARABIC-DOCUMENT-IR.md`](docs/ARABIC-DOCUMENT-IR.md)
+- [`docs/OCR-ENGINE-CONTRACT.md`](docs/OCR-ENGINE-CONTRACT.md)
+- [`docs/OCR-ROUTER-01A.md`](docs/OCR-ROUTER-01A.md)
 - [`docs/BENCHMARK-GUIDE.md`](docs/BENCHMARK-GUIDE.md)
 - [`docs/FOUNDATION-01-REPORT.md`](docs/FOUNDATION-01-REPORT.md)
 

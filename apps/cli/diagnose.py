@@ -7,6 +7,7 @@ import json
 import sys
 from pathlib import Path
 
+from apps.cli.plan_ocr import run_plan_ocr
 from packages.evaluation.summary import format_summary_text, summarize_document
 from packages.pdf_analyzer.analyzer import analyze_pdf
 
@@ -34,6 +35,23 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         type=Path,
         help="Output directory for diagnosis artifacts",
+    )
+
+    plan_ocr = subparsers.add_parser(
+        "plan-ocr",
+        help="Analyze a PDF and write an OCR routing plan (no OCR execution)",
+    )
+    plan_ocr.add_argument(
+        "--input",
+        required=True,
+        type=Path,
+        help="Path to the input PDF file",
+    )
+    plan_ocr.add_argument(
+        "--output",
+        required=True,
+        type=Path,
+        help="Output directory for routing-plan artifacts",
     )
     return parser
 
@@ -103,6 +121,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "diagnose":
         return run_diagnose(args.input, args.output)
+    if args.command == "plan-ocr":
+        return run_plan_ocr(args.input, args.output)
 
     parser.error(f"unknown command: {args.command}")
     return 2
